@@ -32,14 +32,10 @@ def read_touchstone_file(file: str, freq: float) -> rf.Network:
 
 class FloquetPort(object):
     def __init__(self, freq: float) -> None:
-        self.reflection_coeficients, self.capacitances = self.init_floquet_port(
-            freq=freq
-        )
+        self.reflection_coeficients, self.capacitances = self.init_floquet_port(freq=freq)
 
     def init_floquet_port(self, freq: float) -> tuple[np.ndarray, np.ndarray]:
-        net = read_touchstone_file(
-            os.path.join(ROOT_PATH, "data", "ris_floquet", "ris_floquet.s3p"), freq=freq
-        )
+        net = read_touchstone_file(os.path.join(ROOT_PATH, "senf", "ris_floquet", "ris_floquet.s3p"), freq=freq)
 
         diode_r = 1.2
         diode_l = 0.4e-9
@@ -48,18 +44,14 @@ class FloquetPort(object):
         cap = np.linspace(0.15e-13 * 1e12, 2.1e-11 * 1e12, 1001)
 
         for c in cap:
-            impedance = 1j * 2 * np.pi * freq * diode_l + diode_r / (
-                1j * 2 * np.pi * freq * c / 1e12
-            )
+            impedance = 1j * 2 * np.pi * freq * diode_l + diode_r / (1j * 2 * np.pi * freq * c / 1e12)
 
             s_t = ((impedance) - 50) / (impedance + 50)
 
             l1 = rf.Network(s=s_t, z0=50, name="l1", frequency=net.frequency)
             l2 = rf.Network(s=s_t, z0=50, name="l2", frequency=net.frequency)
 
-            p1 = rf.Circuit.Port(
-                z0=FREE_WAVE_IMPEDANCE, name="p1", frequency=net.frequency
-            )
+            p1 = rf.Circuit.Port(z0=FREE_WAVE_IMPEDANCE, name="p1", frequency=net.frequency)
 
             cnx = [
                 [(net, 0), (l1, 0)],
@@ -127,10 +119,7 @@ class SphericalWaveModel(object):
                     -1j
                     * wavenumber
                     * self.distance
-                    * (
-                        j * np.sin(tx_theta) * np.cos(tx_phi)
-                        + i * np.sin(tx_theta) * np.sin(tx_phi)
-                    )
+                    * (j * np.sin(tx_theta) * np.cos(tx_phi) + i * np.sin(tx_theta) * np.sin(tx_phi))
                 )
                 g = np.exp(-1j * wavenumber * r) / r
 
@@ -166,32 +155,23 @@ class SphericalWaveModel(object):
                     -1j
                     * wavenumber
                     * self.distance
-                    * (
-                        j * np.sin(tx_theta) * np.cos(tx_phi)
-                        + i * np.sin(tx_theta) * np.sin(tx_phi)
-                    )
+                    * (j * np.sin(tx_theta) * np.cos(tx_phi) + i * np.sin(tx_theta) * np.sin(tx_phi))
                 )
                 g = np.exp(-1j * wavenumber * r) / r
 
-                energy_density += (
-                    self.floque_port.get_reflection_coeficient(cap=caps[idx]) * h * g
-                )
+                energy_density += self.floque_port.get_reflection_coeficient(cap=caps[idx]) * h * g
                 idx += 1
 
         return np.abs(energy_density) ** 2
 
 
-def _compute_temp(
-    caps: jax.Array, rad_struct: RisRadiationStructure, freq: float
-) -> jax.Array:
+def _compute_temp(caps: jax.Array, rad_struct: RisRadiationStructure, freq: float) -> jax.Array:
     num_rad_ports = rad_struct.get_num_rad_ports()
 
     diode_r = 1.2
     diode_l = 0.4e-9
 
-    impedances = 1j * 2 * np.pi * freq * diode_l + diode_r / (
-        1j * 2 * np.pi * freq * caps / 1e12
-    )
+    impedances = 1j * 2 * np.pi * freq * diode_l + diode_r / (1j * 2 * np.pi * freq * caps / 1e12)
 
     s_t = (impedances - 50) / (impedances + 50)
 
@@ -201,9 +181,7 @@ def _compute_temp(
 
     s_t_rr = jnp.diag(s_t_all)
 
-    x = jnp.linalg.solve(
-        jnp.eye(num_rad_ports) - s_t_rr @ rad_struct.s_r_rr, s_t_rr @ rad_struct.s_r_rf
-    )
+    x = jnp.linalg.solve(jnp.eye(num_rad_ports) - s_t_rr @ rad_struct.s_r_rr, s_t_rr @ rad_struct.s_r_rf)
 
     return x
 
@@ -214,9 +192,7 @@ def compute_physcially_consistent_capacitances(
     caps = jnp.array(caps)
 
     def near_field(c: jax.Array) -> jax.Array:
-        return compute_physcially_consistent_energy_denisty(
-            c, rad_struct=rad_struct, freq=freq
-        )[target_idx]
+        return compute_physcially_consistent_energy_denisty(c, rad_struct=rad_struct, freq=freq)[target_idx]
 
     val_grad_far_field = jax.jit(jax.value_and_grad(near_field))
 
@@ -253,9 +229,7 @@ def compute_physcially_consistent_energy_denisty(
     return r
 
 
-def hfss_ris_parameters32x4(
-    freq: float, name: str, tx_theta: int, tx_phi: int
-) -> RisRadiationStructure:
+def hfss_ris_parameters32x4(freq: float, name: str, tx_theta: int, tx_phi: int) -> RisRadiationStructure:
     data_dir_near_field = os.path.join(ROOT_PATH, "senf", "ris32x4", f"f{freq/1e9}")
     data_dir_far_field = os.path.join(ROOT_PATH, "senf", "ris32x4")
     s_file_path = os.path.join(ROOT_PATH, "senf", "ris32x4", "ris32x4.s256p")
@@ -273,18 +247,10 @@ def hfss_ris_parameters32x4(
 def plot_ris(input_coefficent_str: str, used_model_str: str, region_of_interest: str):
     tx_theta = 30
     tx_phi = 0
-    rad_struct_rect = hfss_ris_parameters32x4(
-        freq=5.8e9, name="rect", tx_theta=tx_theta, tx_phi=tx_phi
-    )
-    rad_struct_boresight = hfss_ris_parameters32x4(
-        freq=5.8e9, name="boresight", tx_theta=tx_theta, tx_phi=tx_phi
-    )
-    rad_struct_circle = hfss_ris_parameters32x4(
-        freq=5.8e9, name="circle", tx_theta=tx_theta, tx_phi=tx_phi
-    )
-    rad_struct_single = hfss_ris_parameters32x4(
-        freq=5.8e9, name="single", tx_theta=tx_theta, tx_phi=tx_phi
-    )
+    rad_struct_rect = hfss_ris_parameters32x4(freq=5.8e9, name="rect", tx_theta=tx_theta, tx_phi=tx_phi)
+    rad_struct_boresight = hfss_ris_parameters32x4(freq=5.8e9, name="boresight", tx_theta=tx_theta, tx_phi=tx_phi)
+    rad_struct_circle = hfss_ris_parameters32x4(freq=5.8e9, name="circle", tx_theta=tx_theta, tx_phi=tx_phi)
+    rad_struct_single = hfss_ris_parameters32x4(freq=5.8e9, name="single", tx_theta=tx_theta, tx_phi=tx_phi)
 
     sw_model = SphericalWaveModel(floquet_freq=5.8e9)
 
@@ -318,9 +284,7 @@ def plot_ris(input_coefficent_str: str, used_model_str: str, region_of_interest:
 
     if used_model_str == "pc":
         energy_density = np.array(
-            compute_physcially_consistent_energy_denisty(
-                rad_struct=rad_struct_plot, caps=input_caps, freq=5.8e9
-            )
+            compute_physcially_consistent_energy_denisty(rad_struct=rad_struct_plot, caps=input_caps, freq=5.8e9)
         )
     elif used_model_str == "sw":
         energy_density = sw_model.compute_spherical_wave_energy_density(
@@ -350,9 +314,7 @@ def plot_ris(input_coefficent_str: str, used_model_str: str, region_of_interest:
 def plot_ris_freq(input_coefficent_str: str, used_model_str: str):
     tx_theta = 30
     tx_phi = 0
-    rad_struct_single = hfss_ris_parameters32x4(
-        freq=5.8e9, tx_phi=tx_phi, tx_theta=tx_theta, name="single"
-    )
+    rad_struct_single = hfss_ris_parameters32x4(freq=5.8e9, tx_phi=tx_phi, tx_theta=tx_theta, name="single")
 
     sw_model = SphericalWaveModel(floquet_freq=5.8e9)
 
@@ -379,14 +341,10 @@ def plot_ris_freq(input_coefficent_str: str, used_model_str: str):
 
     fs = np.linspace(4.8e9, 6.8e9, 51)
     for f in fs:
-        rad_struct_single_f = hfss_ris_parameters32x4(
-            freq=f, tx_phi=tx_phi, tx_theta=tx_theta, name="single"
-        )
+        rad_struct_single_f = hfss_ris_parameters32x4(freq=f, tx_phi=tx_phi, tx_theta=tx_theta, name="single")
         if used_model_str == "pc":
             energy_density = np.array(
-                compute_physcially_consistent_energy_denisty(
-                    rad_struct=rad_struct_single_f, caps=input_caps, freq=f
-                )
+                compute_physcially_consistent_energy_denisty(rad_struct=rad_struct_single_f, caps=input_caps, freq=f)
             )
         elif used_model_str == "sw":
             energy_density = sw_model.compute_spherical_wave_energy_density(

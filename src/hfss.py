@@ -10,7 +10,9 @@ from src.constants import FREE_WAVE_IMPEDANCE, SPEED_OF_LIGHT
 
 ROOT_PATH = os.path.dirname(os.path.dirname(__file__))
 
-NFD_HEADER = "#Index, X, Y, Z, Ex(real, imag), Ey(real, imag), Ez(real, imag), Hx(real, imag), Hy(real, imag), Hz(real, imag)"
+NFD_HEADER = (
+    "#Index, X, Y, Z, Ex(real, imag), Ey(real, imag), Ez(real, imag), Hx(real, imag), Hy(real, imag), Hz(real, imag)"
+)
 NFD_NAMES = [
     "idx",
     "x",
@@ -118,9 +120,7 @@ def _extract_far_field(
     s_r_fr_c = np.zeros((num_samples, num_ports), dtype=complex)
 
     for idx in range(num_ports):
-        df = read_far_field_csv(
-            os.path.join(data_dir, f"rE{file_name}{idx}.csv"), freq=freq
-        )
+        df = read_far_field_csv(os.path.join(data_dir, f"rE{file_name}{idx}.csv"), freq=freq)
 
         i_phi_theta_idxes = np.array(df[["Phi [deg]", "Theta [deg]"]])
         i_phi_theta_idxes[:, 0] = i_phi_theta_idxes[:, 0] % 360
@@ -175,12 +175,8 @@ def _extract_near_field(
 
 def _extract_far_field2near_field(
     num_ports: int, data_dir: str, file_name: str
-) -> tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
-]:
-    df_template = _ndf_to_df(
-        os.path.join(data_dir, f"near_field_plane_{file_name}0.nfd")
-    )
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    df_template = _ndf_to_df(os.path.join(data_dir, f"near_field_plane_{file_name}0.nfd"))
 
     x_z_idxes = np.array(df_template[["x", "z"]])
     y_idxes = df_template["y"]
@@ -215,19 +211,12 @@ def _extract_port2near_field(
     num_ports: int,
     data_dir: str,
     file_name: str,
-) -> tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
-]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     time_stamp = max(
-        [
-            os.path.getmtime(os.path.join(data_dir, f"near_field_{file_name}{idx}.nfd"))
-            for idx in range(num_ports)
-        ]
+        [os.path.getmtime(os.path.join(data_dir, f"near_field_{file_name}{idx}.nfd")) for idx in range(num_ports)]
     )
     save_path_name = re.sub(r"[^\w_. -]", "_", data_dir)
-    cache_path = os.path.join(
-        ROOT_PATH, "cache", f"{save_path_name}cache{file_name}{time_stamp}.npz"
-    )
+    cache_path = os.path.join(ROOT_PATH, "cache", f"{save_path_name}cache{file_name}{time_stamp}.npz")
     if os.path.exists(cache_path):
         npzfile = np.load(cache_path)
         x_z_idxes = npzfile["x_z_idxes"]
@@ -331,9 +320,7 @@ def extract_port2near_field(
     num_ports: int,
     data_dir: str,
     file_name: str,
-) -> tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
-]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_z_idxes, s_ex, s_ey, s_ez, s_hx, s_hy, s_hz = _extract_port2near_field(
         num_ports=num_ports, data_dir=data_dir, file_name=file_name
     )
@@ -360,9 +347,7 @@ def extract_far_field2near_field(
     data_dir: str,
     freq: float,
     file_name: str,
-) -> tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
-]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_z_idxes, s_ex, s_ey, s_ez, s_hx, s_hy, s_hz = _extract_far_field2near_field(
         num_ports=num_ports,
         data_dir=data_dir,
@@ -381,9 +366,7 @@ def extract_far_field2near_field(
     return x_z_idxes, s_ex, s_ey, s_ez, s_hx, s_hy, s_hz
 
 
-def hfss_ula_parameters(
-    data_dir: str, s_file_path: str, file_name: str, freq: float
-) -> RadiationStructure:
+def hfss_ula_parameters(data_dir: str, s_file_path: str, file_name: str, freq: float) -> RadiationStructure:
     s_r_rr = read_touchstone_file(s_file_path, freq=freq)
 
     num_ports = s_r_rr.shape[0]
@@ -416,12 +399,8 @@ def hfss_ris_parameters(
     s_r_rr = read_touchstone_file(s_file_path, freq=freq)
 
     num_ports = s_r_rr.shape[0]
-    df_far_structure = read_far_field_csv(
-        os.path.join(data_dir_far_field, "rEPhi_0.csv"), freq=freq
-    )
-    df_far_structure = df_far_structure[
-        np.abs(df_far_structure["Freq [GHz]"] * 1e9 - freq) < 1
-    ]
+    df_far_structure = read_far_field_csv(os.path.join(data_dir_far_field, "rEPhi_0.csv"), freq=freq)
+    df_far_structure = df_far_structure[np.abs(df_far_structure["Freq [GHz]"] * 1e9 - freq) < 1]
     phi_theta_idxes = np.array(df_far_structure[["Phi [deg]", "Theta [deg]"]])
     phi_theta_idxes[:, 0] = phi_theta_idxes[:, 0] % 360
 
@@ -431,9 +410,7 @@ def hfss_ris_parameters(
     selected_idx = []
     for theta in selected_thetas:
         for phi in selected_phis:
-            x = np.nonzero(
-                (phi_theta_idxes[:, 0] == phi) & (phi_theta_idxes[:, 1] == theta)
-            )[0][0]
+            x = np.nonzero((phi_theta_idxes[:, 0] == phi) & (phi_theta_idxes[:, 1] == theta))[0][0]
             selected_idx.append(x)
     selected_idx = np.array(selected_idx)
 
@@ -454,23 +431,17 @@ def hfss_ris_parameters(
         freq=freq,
     )
 
-    x_z_idxes_ff, s_r_ff_ex, s_r_ff_ey, s_r_ff_ez, s_r_ff_hx, s_r_ff_hy, s_r_ff_hz = (
-        extract_far_field2near_field(
-            num_ports=1, data_dir=data_dir_near_field, freq=freq, file_name=file_name
-        )
+    x_z_idxes_ff, s_r_ff_ex, s_r_ff_ey, s_r_ff_ez, s_r_ff_hx, s_r_ff_hy, s_r_ff_hz = extract_far_field2near_field(
+        num_ports=1, data_dir=data_dir_near_field, freq=freq, file_name=file_name
     )
 
-    x_z_idxes, s_r_fr_ex, s_r_fr_ey, s_r_fr_ez, s_r_fr_hx, s_r_fr_hy, s_r_fr_hz = (
-        extract_port2near_field(
-            num_ports=num_ports, data_dir=data_dir_near_field, file_name=file_name
-        )
+    x_z_idxes, s_r_fr_ex, s_r_fr_ey, s_r_fr_ez, s_r_fr_hx, s_r_fr_hy, s_r_fr_hz = extract_port2near_field(
+        num_ports=num_ports, data_dir=data_dir_near_field, file_name=file_name
     )
 
     assert np.allclose(x_z_idxes, x_z_idxes_ff)
 
-    x = np.nonzero(
-        (phi_theta_idxes[:, 0] == tx_phi) & (phi_theta_idxes[:, 1] == tx_theta)
-    )[0][0]
+    x = np.nonzero((phi_theta_idxes[:, 0] == tx_phi) & (phi_theta_idxes[:, 1] == tx_theta))[0][0]
 
     s_r_rf = s_r_fr_phi[[x]].T
 

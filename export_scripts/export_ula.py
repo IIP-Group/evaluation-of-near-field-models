@@ -88,20 +88,12 @@ for idx in range(0, N):
     dir_path = os.path.join(DIR, "f" + str(f))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-    export_near_field(
-        os.path.join(dir_path, "near_field_rect" + str(idx) + ".nfd"), "rect", f=10
-    )
-    export_near_field(
-        os.path.join(dir_path, "near_field_angle" + str(idx) + ".nfd"), "angle", f=10
-    )
-    export_near_field(
-        os.path.join(dir_path, "near_field_circle" + str(idx) + ".nfd"), "circle", f=10
-    )
+    export_near_field(os.path.join(dir_path, "near_field_rect" + str(idx) + ".nfd"), "rect", f=10)
+    export_near_field(os.path.join(dir_path, "near_field_angle" + str(idx) + ".nfd"), "angle", f=10)
+    export_near_field(os.path.join(dir_path, "near_field_circle" + str(idx) + ".nfd"), "circle", f=10)
 
     for f in linspace(8, 12, 101):
         dir_path = os.path.join(DIR, "f" + str(f))
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        export_near_field(
-            os.path.join(dir_path, "near_field_single" + str(idx) + ".nfd"), "single", f
-        )
+        export_near_field(os.path.join(dir_path, "near_field_single" + str(idx) + ".nfd"), "single", f)

@@ -12,21 +12,14 @@ from src.hfss import RadiationStructure, hfss_ula_parameters
 ROOT_PATH = os.path.dirname(os.path.dirname(__file__))
 
 
-def get_spherical_wave_antenna_positions(
-    num_antennas, reverse_orientation: bool
-) -> np.ndarray:
+def get_spherical_wave_antenna_positions(num_antennas, reverse_orientation: bool) -> np.ndarray:
     freq = 10e9
     wavelength = SPEED_OF_LIGHT / freq
     distance = wavelength / 2
 
     assert num_antennas % 2 == 0
 
-    antenna_positions = (
-        distance
-        * np.linspace(
-            -num_antennas / 2 + 1 / 2, num_antennas / 2 - 1 / 2, num_antennas
-        )[::-1]
-    )
+    antenna_positions = distance * np.linspace(-num_antennas / 2 + 1 / 2, num_antennas / 2 - 1 / 2, num_antennas)[::-1]
 
     if reverse_orientation:
         antenna_positions = antenna_positions[::-1]
@@ -34,17 +27,13 @@ def get_spherical_wave_antenna_positions(
     return antenna_positions
 
 
-def compute_spherical_wave_vector(
-    target_x: float, target_z: float, num_antennas: int, method=None
-) -> np.ndarray:
+def compute_spherical_wave_vector(target_x: float, target_z: float, num_antennas: int, method=None) -> np.ndarray:
     freq = 10e9
     wavelength = SPEED_OF_LIGHT / freq
     wavenumber = 2 * np.pi / wavelength
     offset = 0.001524
 
-    antenna_positions = get_spherical_wave_antenna_positions(
-        num_antennas=num_antennas, reverse_orientation=False
-    )
+    antenna_positions = get_spherical_wave_antenna_positions(num_antennas=num_antennas, reverse_orientation=False)
 
     a = np.ones((num_antennas,), dtype=complex)
     for idx, antenna_position in enumerate(antenna_positions):
@@ -83,22 +72,12 @@ def compute_spherical_wave_energy_density(
 
     assert num_antennas % 2 == 0
 
-    antenna_positions = get_spherical_wave_antenna_positions(
-        num_antennas=num_antennas, reverse_orientation=False
-    )
+    antenna_positions = get_spherical_wave_antenna_positions(num_antennas=num_antennas, reverse_orientation=False)
 
     a_f = np.zeros(point_coords.shape[0], dtype=complex)
     for idx, antenna_position in enumerate(antenna_positions):
-        rr = np.sqrt(
-            (point_coords[:, 0] - antenna_position) ** 2
-            + (point_coords[:, 1] - offset) ** 2
-        )
-        a_f += (
-            np.exp(-1j * (operation_wavenumber * rr))
-            / rr
-            * input_vec[idx]
-            / np.sqrt(np.pi)
-        )
+        rr = np.sqrt((point_coords[:, 0] - antenna_position) ** 2 + (point_coords[:, 1] - offset) ** 2)
+        a_f += np.exp(-1j * (operation_wavenumber * rr)) / rr * input_vec[idx] / np.sqrt(np.pi)
     return np.abs(a_f) ** 2
 
 
@@ -115,9 +94,7 @@ def compute_spherical_wave_vector_obstacle(
 
     operation_wavenumber = 2 * np.pi / SPEED_OF_LIGHT * operation_freq
 
-    antenna_positions = get_spherical_wave_antenna_positions(
-        num_antennas=num_antennas, reverse_orientation=True
-    )
+    antenna_positions = get_spherical_wave_antenna_positions(num_antennas=num_antennas, reverse_orientation=True)
 
     result = np.ones((num_antennas,), dtype=complex)
     for idx, antenna_position in enumerate(antenna_positions):
@@ -148,9 +125,7 @@ def compute_spherical_wave_vector_obstacle(
 
         rr = np.sqrt((target_x - antenna_position) ** 2 + (target_z - offset) ** 2)
 
-        result[idx] = (1 - mask) * (
-            np.exp(-1j * (operation_wavenumber * rr)) / rr / np.sqrt(np.pi)
-        )
+        result[idx] = (1 - mask) * (np.exp(-1j * (operation_wavenumber * rr)) / rr / np.sqrt(np.pi))
 
     vector_peak = result.conj()
     vector_peak = vector_peak / np.linalg.norm(vector_peak)
@@ -170,9 +145,7 @@ def compute_spherical_wave_energy_density_obstacle(
 
     operation_wavenumber = 2 * np.pi / SPEED_OF_LIGHT * operation_freq
 
-    antenna_positions = get_spherical_wave_antenna_positions(
-        num_antennas=num_antennas, reverse_orientation=True
-    )
+    antenna_positions = get_spherical_wave_antenna_positions(num_antennas=num_antennas, reverse_orientation=True)
 
     a_f = np.zeros(point_coords.shape[0], dtype=complex)
     for idx, antenna_position in enumerate(antenna_positions):
@@ -201,16 +174,8 @@ def compute_spherical_wave_energy_density_obstacle(
         t2 = (-b - sqrtdisc) / (2 * a)
         mask = (((0 < t1) & (t1 < 1)) | ((0 < t2) & (t2 < 1))) & (disc > 0)
 
-        rr = np.sqrt(
-            (point_coords[:, 0] - antenna_position) ** 2
-            + (point_coords[:, 1] - offset) ** 2
-        )
-        a_f += (1 - mask) * (
-            np.exp(-1j * (operation_wavenumber * rr))
-            / rr
-            * input_vec[idx]
-            / np.sqrt(np.pi)
-        )
+        rr = np.sqrt((point_coords[:, 0] - antenna_position) ** 2 + (point_coords[:, 1] - offset) ** 2)
+        a_f += (1 - mask) * (np.exp(-1j * (operation_wavenumber * rr)) / rr * input_vec[idx] / np.sqrt(np.pi))
     return np.abs(a_f) ** 2
 
 
@@ -251,12 +216,7 @@ def _compute_g_r(
 
     l2 = s_t_rr @ rad_struct.s_r_rr
     l1 = s_rf @ s_t_tt
-    l3 = (
-        s_rf
-        @ s_t_tr
-        @ rad_struct.s_r_rr
-        @ np.linalg.solve(np.eye(num_rad_ports) - l2, s_t_rt)
-    )
+    l3 = s_rf @ s_t_tr @ rad_struct.s_r_rr @ np.linalg.solve(np.eye(num_rad_ports) - l2, s_t_rt)
     x = s_t_rt @ np.linalg.solve(np.eye(num_tun_ports) - l1 - l3, k_tx)
     g_v_tick = np.linalg.solve(np.eye(num_rad_ports) - l2, x)
 
@@ -264,9 +224,7 @@ def _compute_g_r(
 
 
 def compute_g_r(rad_struct: RadiationStructure) -> np.ndarray:
-    s_t_tt, s_t_rt, s_t_tr, s_t_rr, s_rf, k_tx = get_tuning_network(
-        rad_struct=rad_struct
-    )
+    s_t_tt, s_t_rt, s_t_tr, s_t_rr, s_rf, k_tx = get_tuning_network(rad_struct=rad_struct)
 
     return _compute_g_r(
         rad_struct=rad_struct,
@@ -279,9 +237,7 @@ def compute_g_r(rad_struct: RadiationStructure) -> np.ndarray:
     )
 
 
-def compute_physcially_consistent_vector(
-    rad_struct: RadiationStructure, target_idx: int
-) -> np.ndarray:
+def compute_physcially_consistent_vector(rad_struct: RadiationStructure, target_idx: int) -> np.ndarray:
     num_antennas = rad_struct.get_num_rad_ports()
     target_s_e = np.stack(
         [
@@ -315,21 +271,11 @@ def compute_physcially_consistent_vector(
     return res
 
 
-def compute_physcially_consistent_energy_density(
-    rad_struct: RadiationStructure, input_vec: np.ndarray
-) -> np.ndarray:
+def compute_physcially_consistent_energy_density(rad_struct: RadiationStructure, input_vec: np.ndarray) -> np.ndarray:
     g_a_r = compute_g_r(rad_struct=rad_struct)
 
-    e_field = (
-        np.stack([rad_struct.s_ex, rad_struct.s_ey, rad_struct.s_ez])
-        @ g_a_r
-        @ input_vec
-    )
-    h_field = (
-        np.stack([rad_struct.s_hx, rad_struct.s_hy, rad_struct.s_hz])
-        @ g_a_r
-        @ input_vec
-    )
+    e_field = np.stack([rad_struct.s_ex, rad_struct.s_ey, rad_struct.s_ez]) @ g_a_r @ input_vec
+    h_field = np.stack([rad_struct.s_hx, rad_struct.s_hy, rad_struct.s_hz]) @ g_a_r @ input_vec
 
     e_energy = np.linalg.vector_norm(e_field, axis=0) ** 2
     h_energy = np.linalg.vector_norm(h_field, axis=0) ** 2
@@ -377,9 +323,7 @@ def plot_ula(input_vec_str: str, used_model_str: str, region_of_interest: str):
     rad_struct_single = hfss_ula_parameters128(freq=10e9, name="single")
 
     if input_vec_str == "pc":
-        input_vec = compute_physcially_consistent_vector(
-            rad_struct=rad_struct_single, target_idx=0
-        )
+        input_vec = compute_physcially_consistent_vector(rad_struct=rad_struct_single, target_idx=0)
     elif input_vec_str == "sw":
         input_vec = compute_spherical_wave_vector(
             target_x=rad_struct_single.x_z_idxes[0, 0],
@@ -399,9 +343,7 @@ def plot_ula(input_vec_str: str, used_model_str: str, region_of_interest: str):
         raise ValueError()
 
     if used_model_str == "pc":
-        energy_density = compute_physcially_consistent_energy_density(
-            rad_struct=rad_struct_plot, input_vec=input_vec
-        )
+        energy_density = compute_physcially_consistent_energy_density(rad_struct=rad_struct_plot, input_vec=input_vec)
     elif used_model_str == "sw":
         energy_density = compute_spherical_wave_energy_density(
             point_coords=rad_struct_plot.x_z_idxes,
@@ -430,9 +372,7 @@ def plot_ula_freq(input_vec_str: str, used_model_str: str):
     rad_struct_single = hfss_ula_parameters128(freq=10e9, name="single")
 
     if input_vec_str == "pc":
-        input_vec = compute_physcially_consistent_vector(
-            rad_struct=rad_struct_single, target_idx=0
-        )
+        input_vec = compute_physcially_consistent_vector(rad_struct=rad_struct_single, target_idx=0)
     elif input_vec_str == "sw":
         input_vec = compute_spherical_wave_vector(
             target_x=rad_struct_single.x_z_idxes[0, 0],
@@ -477,9 +417,7 @@ def plot_ula_obstacle(input_vec_str: str, used_model_str: str, region_of_interes
     rad_struct_angle = hfss_ula_parameters_obstacle128(freq=10e9, name="angle")
 
     if input_vec_str == "pc":
-        input_vec = compute_physcially_consistent_vector(
-            rad_struct=rad_struct_single, target_idx=0
-        )
+        input_vec = compute_physcially_consistent_vector(rad_struct=rad_struct_single, target_idx=0)
     elif input_vec_str == "sw":
         input_vec = compute_spherical_wave_vector_obstacle(
             target_x=rad_struct_single.x_z_idxes[0, 0],
@@ -498,9 +436,7 @@ def plot_ula_obstacle(input_vec_str: str, used_model_str: str, region_of_interes
         raise ValueError()
 
     if used_model_str == "pc":
-        energy_density = compute_physcially_consistent_energy_density(
-            rad_struct=rad_struct_plot, input_vec=input_vec
-        )
+        energy_density = compute_physcially_consistent_energy_density(rad_struct=rad_struct_plot, input_vec=input_vec)
     elif used_model_str == "sw":
         energy_density = compute_spherical_wave_energy_density_obstacle(
             point_coords=rad_struct_plot.x_z_idxes,

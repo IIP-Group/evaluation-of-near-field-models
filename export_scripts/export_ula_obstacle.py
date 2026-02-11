@@ -79,15 +79,7 @@ for idx in range(0, N):
     oModule1 = oDesign.GetModule("Solutions")
     oModule1.EditSources(edit_sources_array(idx + 1))
 
-    export_near_field(
-        os.path.join(DIR, "near_field_single" + str(idx) + ".nfd"), "single", f=10
-    )
-    export_near_field(
-        os.path.join(DIR, "near_field_rect" + str(idx) + ".nfd"), "rect", f=10
-    )
-    export_near_field(
-        os.path.join(DIR, "near_field_angle" + str(idx) + ".nfd"), "angle", f=10
-    )
-    export_near_field(
-        os.path.join(DIR, "near_field_circle" + str(idx) + ".nfd"), "circle", f=10
-    )
+    export_near_field(os.path.join(DIR, "near_field_single" + str(idx) + ".nfd"), "single", f=10)
+    export_near_field(os.path.join(DIR, "near_field_rect" + str(idx) + ".nfd"), "rect", f=10)
+    export_near_field(os.path.join(DIR, "near_field_angle" + str(idx) + ".nfd"), "angle", f=10)
+    export_near_field(os.path.join(DIR, "near_field_circle" + str(idx) + ".nfd"), "circle", f=10)
