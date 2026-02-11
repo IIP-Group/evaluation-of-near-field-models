@@ -1,0 +1,6 @@
+senf/*
+!senf/.gitkeep
+cache/*
+!cache/.gitkeep
+.DS_Store
+**__pycache__**
