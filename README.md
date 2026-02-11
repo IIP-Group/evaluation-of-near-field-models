@@ -3,7 +3,7 @@
 We provide in this repository the code and the model parameters via the SENF (Sampled Electromagnet Near Field) dataset for our sampled near-field REMS model.
 
 ## How to run the code
-- Download the SENF dataset [here](https://iis-people.ee.ethz.ch/~datasets/senf/) and place them in the senf folder 
+- Download the SENF dataset [here](https://iis-people.ee.ethz.ch/~datasets/senf/) and place it in the senf folder 
 - Install [uv](https://docs.astral.sh/uv/)
 - Run `uv run main.py`
 
